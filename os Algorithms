@@ -1,0 +1,67 @@
+#include <iostream>
+#include <vector>
+#include <random>
+
+struct Process {
+    int processID;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime;
+};
+
+void runRoundRobin(std::vector<Process>& processes, int timeQuantum) {
+    int numProcesses = processes.size();
+    std::vector<int> completionTimes(numProcesses, 0);
+    std::vector<bool> completed(numProcesses, false);
+    int currentTime = 0;
+    int completedProcesses = 0;
+
+    while (completedProcesses < numProcesses) {
+        for (int i = 0; i < numProcesses; i++) {
+            if (!completed[i] && processes[i].arrivalTime <= currentTime) {
+                int executionTime = std::min(timeQuantum, processes[i].remainingTime);
+                processes[i].remainingTime -= executionTime;
+                currentTime += executionTime;
+
+                if (processes[i].remainingTime == 0) {
+                    completed[i] = true;
+                    completedProcesses++;
+                    completionTimes[i] = currentTime;
+                    std::cout << "Process " << processes[i].processID << " completed execution." << std::endl;
+                }
+            }
+        }
+    }
+
+    // Print completion times
+    std::cout << "\nCompletion times:\n";
+    for (int i = 0; i < numProcesses; i++) {
+        std::cout << "Process " << processes[i].processID << ": " << completionTimes[i] << std::endl;
+    }
+}
+
+int main() {
+    std::vector<Process> processes;
+    const int numProcesses = 10;
+    const int timeQuantum = 5;
+
+    // Generate random arrival times and burst times for each process
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> arrivalTimeDistribution(0, 10);
+    std::uniform_int_distribution<int> burstTimeDistribution(1, 20);
+
+    for (int i = 0; i < numProcesses; i++) {
+        Process p;
+        p.processID = i;
+        p.arrivalTime = arrivalTimeDistribution(gen);
+        p.burstTime = burstTimeDistribution(gen);
+        p.remainingTime = p.burstTime;
+        processes.push_back(p);
+    }
+
+    // Run Round Robin scheduling algorithm
+    runRoundRobin(processes, timeQuantum);
+
+    return 0;
+}
